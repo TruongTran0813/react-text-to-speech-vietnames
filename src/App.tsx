@@ -116,7 +116,7 @@ function App() {
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="me-auto">
-                <Nav.Link href="https://github.com/TruongTran0813">
+                <Nav.Link href="https://github.com/TruongTran0813/react-text-to-speech-vietnames">
                   Github
                 </Nav.Link>
                 <Nav.Link href="https://www.facebook.com/ku.p.truong/">
