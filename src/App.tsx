@@ -1,6 +1,13 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useEffect, useRef, useState } from "react";
-import { Container, FloatingLabel, Form, Nav, Navbar } from "react-bootstrap";
+import {
+  Container,
+  FloatingLabel,
+  Form,
+  Nav,
+  Navbar,
+  Spinner,
+} from "react-bootstrap";
 import "./App.css";
 
 export interface IVoices {
@@ -11,10 +18,10 @@ export interface IVoices {
 function App() {
   const [text, setText] = useState("");
   const audioRef = useRef<HTMLAudioElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [voices, setVoices] = useState<IVoices[]>([]);
   const [voice, setVoice] = useState("");
   const [speed, setSpeed] = useState(1);
+  const [isLoading, setLoading] = useState(false);
   const token_id = process.env.REACT_APP_TOKEN_ID || "";
   //Để có "token id" bạn có thể đăng ký tài khoản tại viettelgroup.ai, sau đó login, rồi vào menu token để tạo
 
@@ -56,7 +63,7 @@ function App() {
 
   const convert = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    inputRef.current?.focus();
+
     if (!text) {
       alert("Vui lòng nhập nội dung muốn chuyển đổi");
       return;
@@ -65,30 +72,38 @@ function App() {
       alert("Nội dung không quá 500 ký tự");
       return;
     }
+    setLoading(true);
     const data = await getData();
-
-    const mediaSource = await new MediaSource();
-    if (audioRef.current) {
-      audioRef.current.src = URL.createObjectURL(mediaSource);
-    }
-    mediaSource.addEventListener("sourceopen", sourceOpen);
-    async function sourceOpen() {
-      const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
-      if (data.body) {
-        const reader = data.body.getReader();
-
-        let result;
-        while (!(result = await reader.read()).done) {
-          sourceBuffer.appendBuffer(result.value);
-        }
-        sourceBuffer.addEventListener("updateend", function (_) {
-          mediaSource.endOfStream();
-          //console.log(mediaSource.readyState); // ended
-        });
-        audioRef.current?.play();
-        setText("");
+    if (data.body) {
+      const reader = data.body.getReader();
+      let arr: any[] = [];
+      let result;
+      while (!(result = await reader.read()).done) {
+        arr.push(result.value);
+      }
+      const newArr = new Uint8Array(
+        arr.reduce((acc, curr) => [...acc, ...curr], [])
+      );
+      const blob = new Blob([newArr], { type: "audio/mp3" });
+      let url = window.URL.createObjectURL(blob);
+      console.log(url);
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.play();
       }
     }
+    setLoading(false);
+  };
+  const randomName = () => {
+    var m = new Date();
+    var dateString =
+      m.getUTCFullYear() +
+      ("0" + (m.getUTCMonth() + 1)).slice(-2) +
+      ("0" + m.getUTCDate()).slice(-2) +
+      ("0" + m.getUTCHours()).slice(-2) +
+      ("0" + m.getUTCMinutes()).slice(-2) +
+      ("0" + m.getUTCSeconds()).slice(-2);
+    return dateString;
   };
   return (
     <div className="App">
@@ -111,7 +126,7 @@ function App() {
             </Navbar.Collapse>
           </Container>
         </Navbar>
-        <div className="row justify-content-center align-items-center h-75">
+        <div className="row justify-content-center align-items-center">
           <div className="col-12 col-md-10 col-sm-12 col-lg-8 col-xl-6">
             <h4 className="mb-4">
               Website dựa trên{" "}
@@ -167,7 +182,6 @@ function App() {
                 <Form.Control
                   as="textarea"
                   placeholder="Nhập nội dung"
-                  ref={inputRef}
                   required
                   value={text}
                   maxLength={500}
@@ -176,9 +190,41 @@ function App() {
                 />
               </FloatingLabel>
 
-              <button type="submit" className="btn btn-primary">
-                Chuyển
-              </button>
+              <div className="d-flex">
+                {isLoading ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary d-flex align-items-center"
+                  >
+                    <Spinner animation="border" variant="light" /> &nbsp; Đang
+                    chuyển
+                  </button>
+                ) : (
+                  <button type="submit" className="btn btn-primary">
+                    Chuyển
+                  </button>
+                )}
+                {audioRef.current?.src && (
+                  <>
+                    <button
+                      onClick={() => audioRef.current?.play()}
+                      type="button"
+                      className=" ms-4 btn btn-success"
+                    >
+                      Phát lại
+                    </button>
+                    <a
+                      href={audioRef.current.src}
+                      target="_blank"
+                      rel="noreferrer"
+                      download={`sound-${randomName()}.mp3`}
+                      className=" ms-4 btn btn-warning"
+                    >
+                      Tải xuống âm thanh
+                    </a>
+                  </>
+                )}
+              </div>
             </form>
           </div>
         </div>
