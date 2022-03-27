@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { FloatingLabel, Form, Spinner } from "react-bootstrap";
+import React, { useState } from "react";
+import { Spinner } from "react-bootstrap";
 
 export const SpeechToText = () => {
   const [loadingFile, setLoadingFile] = useState(false);

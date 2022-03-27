@@ -78,7 +78,6 @@ export const TextToSpeech = () => {
       );
       const blob = new Blob([newArr], { type: "audio/mp3" });
       let url = window.URL.createObjectURL(blob);
-      console.log(url);
       if (audioRef.current) {
         audioRef.current.src = url;
         audioRef.current.play();
