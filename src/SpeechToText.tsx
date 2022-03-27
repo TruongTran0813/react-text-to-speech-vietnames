@@ -60,6 +60,7 @@ export const SpeechToText = () => {
           <input
             type="file"
             className="d-none"
+            disabled={loadingFile}
             onChange={(e) => e.target.files && handleSetFile(e.target.files[0])}
           />
         </label>
